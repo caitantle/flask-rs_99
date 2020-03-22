@@ -1,14 +1,21 @@
 [package]
 name = "bottle"
-version = "0.1.0"
+version = "1.0.0"
+repository = "https://github.com/bpmason1/bottle"
 authors = ["Brian Mason <bpmason1@hotmail.com>"]
+license = "MIT"
+description = "create http Request/Response objects from a raw TcpStream"
+keywords = ["http", "tcp"]
+categories = ["network-programming"]
 edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 http = "0.2.0"
-mockito = "0.23.3"
 nom = { version = "5.1.1", features = ["regexp"] }
+
+[dev-dependencies]
+mockito = "0.23.3"
 rand = "0.7.3"
 
