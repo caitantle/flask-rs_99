@@ -78,6 +78,6 @@ fn _read_http_request(mut stream: TcpStream) -> Result<Request<Vec<u8>>, http::E
 
 }
 
-pub fn read_http_request(mut stream: TcpStream) -> Result<Request<Vec<u8>>, http::Error> {
+pub fn read_http_request(stream: TcpStream) -> Result<Request<Vec<u8>>, http::Error> {
     _read_http_request(stream)
 }
