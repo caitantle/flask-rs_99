@@ -5,6 +5,7 @@ repository = "https://github.com/bpmason1/flask-rs"
 authors = ["Brian Mason <bpmason1@hotmail.com>"]
 license = "MIT"
 description = "create http Request/Response objects from a raw TcpStream"
+readme = "README.md"
 keywords = ["http", "tcp"]
 categories = ["network-programming"]
 edition = "2018"
@@ -12,7 +13,7 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-http = "0.2.0"
+http = "0.2"
 nom = { version = "5.1.1", features = ["regexp"] }
 
 [dev-dependencies]

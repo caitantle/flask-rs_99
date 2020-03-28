@@ -1,4 +1,6 @@
-# flsk
+[![Build Status](https://travis-ci.org/bpmason1/fastforward.svg?branch=master)](https://travis-ci.org/bpmason1/flask-rs)
 
-flask is a library for creating http Request/Response object from a clienrt TcpStrem
+# flask
+
+Flask is a tool for storing the contents of the TcpStream and creating an http Request/Response
 
