@@ -20,8 +20,6 @@ use std::io::{
     prelude::*
 };
 use std::net::TcpStream;
-use std::ptr;
-use std::cmp::min;
 
 
 #[derive(PartialEq, Debug)]
@@ -91,17 +89,9 @@ fn _read_http_response(reader: &mut BufReader<TcpStream>) -> Result<Response<Vec
         response = response.header(header_line.key, header_line.value);
     }
 
-    let mut bytes_read = 0;
     let mut body = vec![0; content_length];
-    let mut buf2 = vec![0; content_length];
-    while bytes_read < content_length {
-        let body_size = reader.read(&mut buf2).unwrap();
-        let bytes_to_copy = min(body_size, content_length - bytes_read);
-        unsafe {
-            ptr::copy_nonoverlapping(buf2.as_ptr(), body.as_mut_ptr().offset(bytes_read as isize), bytes_to_copy);
-        }
-        bytes_read += body_size;
-        // std::thread::sleep(std::time::Duration::from_millis(5));
+    if reader.read_exact(&mut body).is_err() {
+        eprintln!("ERROR reading response body from stream");
     }
 
     response.body(body)
