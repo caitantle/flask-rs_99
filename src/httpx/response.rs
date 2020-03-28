@@ -113,8 +113,12 @@ pub fn read_http_response(stream: TcpStream) -> Result<Response<Vec<u8>>, http::
     _read_http_response(&mut reader)
 }
 
+//#################################################################################################################
+// test cases go below here
+//#################################################################################################################
 #[cfg(test)]
 mod tests {
+    // Test creating an http Response from the mockito response
     extern crate rand;
 
     use super::*;
@@ -126,15 +130,70 @@ mod tests {
     
     #[test]
     fn test_minimal_get_request() {
-        let _mock = mock("GET", "/hello").create();
+        let mock_body = "Hello World!";
+        let _mock = mock("GET", "/hello").with_body(mock_body.clone()).create();
+
         let mut stream = TcpStream::connect(server_address()).unwrap();
         stream.write_all("GET /hello HTTP/1.1\r\n\r\n".as_bytes()).unwrap();
+
         let resp = read_http_response(stream).unwrap();
         let content_length = resp.headers()[http::header::CONTENT_LENGTH].to_str().unwrap();
         assert_eq!(resp.status(), StatusCode::OK);
         assert_eq!(resp.version(), Version::HTTP_11);
-        assert_eq!(content_length, "0");
-        assert!(resp.body().is_empty());
+        assert_eq!(content_length, mock_body.len().to_string());
+        // assert!(resp.body().is_empty());
+
+        // verify the response body is correct
+        let resp_body: String = String::from_utf8(resp.body().to_vec()).unwrap();
+        assert_eq!(resp_body.len(), mock_body.len());
+        assert_eq!(resp_body, mock_body);
+
+        _mock.assert();
+    }
+
+    #[test]
+    fn test_get_request_with_query_string() {
+        let endpoint = "/alpha/beta/gamma?foo=bar&hello=world";
+        let mock_body = "I'm a teapot";
+        let _mock = mock("GET", endpoint).with_body(mock_body.clone()).create();
+
+        let mut stream = TcpStream::connect(server_address()).unwrap();
+        let payload = format!("GET {} HTTP/1.1\r\n\r\n", endpoint);
+        stream.write_all(payload.as_bytes()).unwrap();
+
+        let resp = read_http_response(stream).unwrap();
+        let content_length = resp.headers()[http::header::CONTENT_LENGTH].to_str().unwrap();
+
+        assert_eq!(resp.status(), StatusCode::OK);
+        assert_eq!(resp.version(), Version::HTTP_11);
+        assert_eq!(content_length, mock_body.len().to_string());
+
+        _mock.assert();
+    }
+
+    #[test]
+    fn test_get_request_with_headers() {
+        let endpoint = "/alpha/beta/gamma?foo=bar&hello=world";
+        let mock_body = "it's a small world";
+        let _mock = mock("GET", endpoint)
+                .with_header("puppy", "dog")
+                .with_header("GoLd", "fish") // headers names are NOT case sensitive
+                .with_body(mock_body.clone())
+                .create();
+
+        let mut stream = TcpStream::connect(server_address()).unwrap();
+        let payload = format!("GET {} HTTP/1.1\r\n\r\n", endpoint);
+        stream.write_all(payload.as_bytes()).unwrap();
+
+        let resp = read_http_response(stream).unwrap();
+        let content_length = resp.headers()[http::header::CONTENT_LENGTH].to_str().unwrap();
+
+        assert_eq!(resp.status(), StatusCode::OK);
+        assert_eq!(resp.version(), Version::HTTP_11);
+        assert_eq!(content_length, mock_body.len().to_string());
+
+        assert_eq!(resp.headers()["puppy"], "dog");
+        assert_eq!(resp.headers()["gold"], "fish");
 
         _mock.assert();
     }
@@ -194,6 +253,30 @@ mod tests {
         assert_eq!(resp.status(), StatusCode::OK);
         assert_eq!(body.len(), rand_len);
         assert_eq!(body, rand_body);
+
+        _mock.assert();
+    }
+
+    #[test]
+    fn test_basic_options_request() {
+        let endpoint = "/";
+        let status_code = 100;
+
+        let _mock = mock("OPTIONS", endpoint)
+            .with_status(status_code)
+            .create();
+
+        let mut stream = TcpStream::connect(server_address()).unwrap();
+        let payload = format!("OPTIONS {} HTTP/1.1\r\n\r\n", endpoint);
+        stream.write_all(payload.as_bytes()).unwrap();
+
+        let resp = read_http_response(stream).unwrap();
+        let content_length = resp.headers()[http::header::CONTENT_LENGTH].to_str().unwrap();
+
+        assert_eq!(resp.status(), StatusCode::CONTINUE);  // value is 100
+        assert_eq!(resp.status().as_u16(), status_code as u16);
+        assert_eq!(resp.version(), Version::HTTP_11);
+        assert_eq!(content_length, "0");
 
         _mock.assert();
     }
