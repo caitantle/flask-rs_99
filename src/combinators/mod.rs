@@ -72,14 +72,6 @@ named!( pub http_method <&str>,
     )
 );
 
-fn is_body_value_char(i: u8) -> bool {
-    i > 0
-}
-
-named!( pub read_body,
-    take_while!(is_body_value_char)
-);
-
 fn is_http_header_name_char(i: u8) -> bool {
     is_alphanumeric(i) ||
     b"!#$%&'*+-.^_`|~".contains(&i)

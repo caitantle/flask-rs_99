@@ -6,7 +6,6 @@ pub use response::read_http_response;
 
 use std::str::{self, from_utf8};
 use nom::character::is_alphanumeric;
-use std::vec::Vec;
 
 use crate::combinators::*;
 
@@ -47,18 +46,3 @@ named!( read_header <Header>,
         (Header {key: key, value: value})
     )
 );
-
-named!(all_headers< Vec<Header> >,
-    terminated!(
-        many0!(read_header),
-        opt!(crlf)
-    )
-);
-
-fn array_to_vec(arr: &[u8]) -> Vec<u8> {
-    let mut vector = Vec::new();
-    for i in arr.iter() {
-        vector.push(*i);
-    }
-    vector
-}

@@ -36,7 +36,7 @@ named!( parse_response_line <ResponseLine>,
     )
 );
 
-fn read_initial_request_line(reader: &mut BufReader<TcpStream>) -> Result<Builder, http::Error> {
+fn _read_initial_request_line(reader: &mut BufReader<TcpStream>) -> Result<Builder, http::Error> {
     let mut response = Response::builder();
 
     let mut line: String = String::from("");
@@ -64,7 +64,7 @@ fn read_initial_request_line(reader: &mut BufReader<TcpStream>) -> Result<Builde
 }
 
 fn _read_http_response(reader: &mut BufReader<TcpStream>) -> Result<Response<Vec<u8>>, http::Error> {
-    let mut response = read_initial_request_line(reader)?;
+    let mut response = _read_initial_request_line(reader)?;
 
     let mut content_length = 0;
 
