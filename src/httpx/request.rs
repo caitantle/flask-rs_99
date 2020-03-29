@@ -1,5 +1,6 @@
 use super::{
     CONTENT_LENGTH_HEADER,
+    FlaskError,
     get_http_version,
     http,
     http_version,
@@ -40,7 +41,7 @@ named!( parse_request_line <RequestLine>,
     )
 );
 
-fn _read_initial_request_line(reader: &mut BufReader<TcpStream>) -> Result<Builder, http::Error> {
+fn _read_initial_request_line(reader: &mut BufReader<TcpStream>) -> Result<Builder, FlaskError> {
     let mut request = Request::builder();
 
     let mut line: String = String::from("");
@@ -59,7 +60,7 @@ fn _read_initial_request_line(reader: &mut BufReader<TcpStream>) -> Result<Build
     Ok(request)
 }
 
-fn _read_http_request(reader: &mut BufReader<TcpStream>) -> Result<Request<Vec<u8>>, http::Error> {
+fn _read_http_request(reader: &mut BufReader<TcpStream>) -> Result<Request<Vec<u8>>, FlaskError> {
     let mut request = _read_initial_request_line(reader)?;
 
     let content_length = {
@@ -89,11 +90,17 @@ fn _read_http_request(reader: &mut BufReader<TcpStream>) -> Result<Request<Vec<u
         eprintln!("ERROR reading request body from stream");
     }
 
-    request.body(body)
+    match request.body(body) {
+        Ok(req) => Ok(req),
+        Err(http_err) => {
+            let msg: String = http_err.to_string();
+            let flask_err = FlaskError::BadRequest(msg);
+            Err(flask_err) 
+        }
+    }
 }
 
-pub fn read_http_request(stream: TcpStream) -> Result<Request<Vec<u8>>, http::Error> {
+pub fn read_http_request(stream: TcpStream) -> Result<Request<Vec<u8>>, FlaskError> {
     let mut reader: BufReader<TcpStream> = BufReader::new(stream);
-
     _read_http_request(&mut reader)
 }

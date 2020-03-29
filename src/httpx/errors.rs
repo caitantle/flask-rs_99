@@ -5,6 +5,12 @@ pub enum FlaskError {
     NotImplemented(String),
 }
 
+impl ToString for FlaskError {
+    fn to_string(&self) -> String {
+        self.get_msg().to_string()
+    }
+}
+
 impl fmt::Debug for FlaskError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_tuple("flask::errors::Error")
