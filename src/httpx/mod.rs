@@ -14,6 +14,8 @@ use std::str::{self, from_utf8};
 
 use crate::combinators::*;
 
+const CONTENT_LENGTH_HEADER: &str = "content-length";
+
 struct Header<'b> {
     key: &'b str,
     value: &'b str,

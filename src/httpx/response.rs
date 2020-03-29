@@ -1,4 +1,5 @@
 use super::{
+    CONTENT_LENGTH_HEADER,
     get_http_version,
     http,
     http_version,
@@ -77,7 +78,7 @@ fn _read_http_response(reader: &mut BufReader<TcpStream>) -> Result<Response<Vec
             // println!("{:?}", line.as_bytes());
 
 
-            if header_line.key.to_lowercase() == "content-length" {
+            if header_line.key.to_lowercase() == CONTENT_LENGTH_HEADER {
                 content_length_mut = header_line.value.parse::<usize>().unwrap();
             }
             // println!("Key => {}", elem.key);

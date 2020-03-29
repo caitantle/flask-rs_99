@@ -1,4 +1,5 @@
 use super::{
+    CONTENT_LENGTH_HEADER,
     get_http_version,
     http,
     http_version,
@@ -29,6 +30,7 @@ struct RequestLine<'a> {
     target: &'a str,
     version: &'a str,
 }
+
 
 named!( parse_request_line <RequestLine>,
     do_parse!(
@@ -74,7 +76,7 @@ fn _read_http_request(reader: &mut BufReader<TcpStream>) -> Result<Request<Vec<u
 
             let (_, header_line) = read_header(line.as_bytes()).unwrap();
 
-            if header_line.key.to_lowercase() == "content-length" {
+            if header_line.key.to_lowercase() == CONTENT_LENGTH_HEADER {
                 content_length_mut = header_line.value.parse::<usize>().unwrap();
             }
             request = request.header(header_line.key, header_line.value);
