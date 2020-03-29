@@ -1,8 +1,9 @@
 use super::{
+    get_http_version,
     http,
     http_version,
-    read_header,
     http_method,
+    read_header,
     to_space
 };
 
@@ -12,7 +13,7 @@ use crate::combinators::{
     spaces
 };
 
-use http::{Request, Version};
+use http::Request;
 use http::request::Builder;
 use std::io::{
     self,
@@ -44,19 +45,12 @@ fn _read_initial_request_line(reader: &mut BufReader<TcpStream>) -> Result<Build
     match reader.read_line(&mut line) {
         Ok(_) => {
             let (_, req_line) = parse_request_line(line.as_bytes()).unwrap();
+            let http_version = get_http_version(req_line.version).unwrap();
 
             request = request
                 .method(req_line.method)
-                .uri(req_line.target);
-
-            request = match req_line.version {
-                "0.9" => request.version( Version::HTTP_09 ),
-                "1.0" => request.version( Version::HTTP_10 ),
-                "1.1" => request.version( Version::HTTP_11 ),
-                "2.0" => request.version( Version::HTTP_2 ),
-                "3.0" => request.version( Version::HTTP_3 ),
-                _ => { request }  // I don't know the http version so skip it
-            };
+                .uri(req_line.target)
+                .version(http_version);
         },
         Err(_) => {}
     }

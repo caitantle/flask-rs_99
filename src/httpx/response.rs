@@ -1,4 +1,5 @@
 use super::{
+    get_http_version,
     http,
     http_version,
     read_header,
@@ -12,7 +13,7 @@ use crate::combinators::{
     spaces
 };
 
-use http::{Response, StatusCode, Version};
+use http::{Response, StatusCode};
 use http::response::Builder;
 use std::io::{
     self,
@@ -46,17 +47,11 @@ fn _read_initial_request_line(reader: &mut BufReader<TcpStream>) -> Result<Build
 
             let status_code_bytes = resp_line.status_code.as_bytes();
             let status_code = StatusCode::from_bytes(status_code_bytes)?;
+            let http_version = get_http_version(resp_line.version).unwrap();
 
-            response = response.status(status_code);
-
-            response = match resp_line.version {
-                "0.9" => response.version( Version::HTTP_09 ),
-                "1.0" => response.version( Version::HTTP_10 ),
-                "1.1" => response.version( Version::HTTP_11 ),
-                "2.0" => response.version( Version::HTTP_2 ),
-                "3.0" => response.version( Version::HTTP_3 ),
-                _ => { response }  // I don't know the http version so skip it
-            };
+            response = response
+                .status(status_code)
+                .version(http_version);
         },
         Err(_) => {}
     }
@@ -112,7 +107,7 @@ mod tests {
     extern crate rand;
 
     use super::*;
-    use http::{StatusCode};
+    use http::{Version, StatusCode};
     use mockito::{mock, server_address};
     use std::net::TcpStream;
     use rand::{Rng, thread_rng};

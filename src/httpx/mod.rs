@@ -1,11 +1,16 @@
+mod errors;
 mod request;
 mod response;
 
+
+// These function are the modules public interface
+pub use errors::FlaskError;
 pub use request::read_http_request;
 pub use response::read_http_response;
 
-use std::str::{self, from_utf8};
+use http::Version;
 use nom::character::is_alphanumeric;
+use std::str::{self, from_utf8};
 
 use crate::combinators::*;
 
@@ -46,3 +51,21 @@ named!( read_header <Header>,
         (Header {key: key, value: value})
     )
 );
+
+fn get_http_version(ver_str: &str) -> Result<Version, FlaskError> {
+    match ver_str {
+        "1.1" => Ok( Version::HTTP_11 ),
+        ver @ "0.9" | ver @ "1.0" | ver @ "2.0" | ver @ "3.0" => {
+            let fmt_msg = format!("Unsupported HTTP version {}", ver);
+            let msg = String::from(fmt_msg);
+            let err = FlaskError::NotImplemented(msg);
+            Err(err)
+        },
+        ver @ _ => {
+            let fmt_msg = format!("Unknown HTTP version {}", ver);
+            let msg = String::from(fmt_msg);
+            let err = FlaskError::BadRequest(msg);
+            Err(err)
+        }
+    }
+}
