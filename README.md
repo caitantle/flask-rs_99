@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/bpmason1/fastforward.svg?branch=master)](https://travis-ci.org/bpmason1/flask-rs)
+[![Build Status](https://travis-ci.org/bpmason1/flask-rs.svg?branch=master)](https://travis-ci.org/bpmason1/flask-rs)
 
 # flask
 
