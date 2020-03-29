@@ -1,7 +1,10 @@
 use std::fmt;
 
 pub enum FlaskError {
-    BadRequest(String),
+    BadRequest(String),             // 400
+    ClientClosedRequest(String),    // 499
+    InternalServerError(String),    // 500
+    BadGateway(String),             // 502
     NotImplemented(String),
 }
 
@@ -23,6 +26,9 @@ impl FlaskError {
     pub fn get_msg(&self) -> &str {
         match self {
             FlaskError::BadRequest(s) => s,
+            FlaskError::ClientClosedRequest(s) => s,
+            FlaskError::InternalServerError(s) => s,
+            FlaskError::BadGateway(s) => s,
             FlaskError::NotImplemented(s) => s,
         }
     }

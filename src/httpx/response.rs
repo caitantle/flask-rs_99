@@ -4,6 +4,7 @@ use super::{
     get_http_version,
     http,
     http_version,
+    read_buffered_line,
     read_header,
     token
 };
@@ -18,7 +19,6 @@ use crate::combinators::{
 use http::{Response, StatusCode};
 use http::response::Builder;
 use std::io::{
-    self,
     BufReader,
     prelude::*
 };
@@ -66,12 +66,8 @@ fn _read_http_response(reader: &mut BufReader<TcpStream>) -> Result<Response<Vec
     let content_length = {
         let mut content_length_mut = 0;
         loop {
-            let mut line: String = String::from("");
-            let num_bytes_result: Result<usize, io::Error> = reader.read_line(&mut line);
-
-            let num_bytes = num_bytes_result.unwrap();
-
-            if num_bytes == 2 && line.as_str() == "\r\n" {
+            let line: String = read_buffered_line(reader)?;
+            if line.as_str() == "\r\n" {
                 break;
             }
 

@@ -10,6 +10,11 @@ pub use response::read_http_response;
 
 use http::Version;
 use nom::character::is_alphanumeric;
+use std::net::TcpStream;
+use std::io::{
+    BufReader,
+    prelude::*
+};
 use std::str::{self, from_utf8};
 
 use crate::combinators::*;
@@ -68,6 +73,26 @@ fn get_http_version(ver_str: &str) -> Result<Version, FlaskError> {
             let msg = String::from(fmt_msg);
             let err = FlaskError::BadRequest(msg);
             Err(err)
+        }
+    }
+}
+
+fn read_buffered_line(reader: &mut BufReader<TcpStream>) -> Result<String, FlaskError> {
+    let mut line: String = String::from("");
+    match reader.read_line(&mut line) {
+        Ok(num_bytes) => {
+            if num_bytes != line.len() {
+                let msg = format!("Error in request line byte count");
+                let flask_err = FlaskError::InternalServerError(msg);
+                Err(flask_err)
+            } else {
+                Ok(line)
+            }
+        },
+        Err(buf_err) => {
+            let msg = format!("Error reading buffered request line: {}", buf_err);
+            let flask_err = FlaskError::ClientClosedRequest(msg);
+            Err(flask_err)
         }
     }
 }
