@@ -60,25 +60,27 @@ fn _read_initial_request_line(reader: &mut BufReader<TcpStream>) -> Result<Build
 fn _read_http_request(reader: &mut BufReader<TcpStream>) -> Result<Request<Vec<u8>>, http::Error> {
     let mut request = _read_initial_request_line(reader)?;
 
-    let mut content_length = 0;
+    let content_length = {
+        let mut content_length_mut = 0;
+        loop {
+            let mut line: String = String::from("");
+            let num_bytes_result: Result<usize, io::Error> = reader.read_line(&mut line);
 
-    loop {
-        let mut line: String = String::from("");
-        let num_bytes_result: Result<usize, io::Error> = reader.read_line(&mut line);
+            let num_bytes = num_bytes_result.unwrap();
 
-        let num_bytes = num_bytes_result.unwrap();
+            if num_bytes == 2 && line.as_str() == "\r\n" {
+                break;
+            }
 
-        if num_bytes == 2 && line.as_str() == "\r\n" {
-            break;
+            let (_, header_line) = read_header(line.as_bytes()).unwrap();
+
+            if header_line.key.to_lowercase() == "content-length" {
+                content_length_mut = header_line.value.parse::<usize>().unwrap();
+            }
+            request = request.header(header_line.key, header_line.value);
         }
-
-        let (_, header_line) = read_header(line.as_bytes()).unwrap();
-
-        if header_line.key.to_lowercase() == "content-length" {
-            content_length = header_line.value.parse::<usize>().unwrap();
-        }
-        request = request.header(header_line.key, header_line.value);
-    }
+        content_length_mut
+    };
 
     let mut body = vec![0; content_length];
     if reader.read_exact(&mut body).is_err() {
