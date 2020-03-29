@@ -1,13 +1,13 @@
 [package]
 name = "flask"
-version = "1.1.0"
+version = "2.0.0"
 repository = "https://github.com/bpmason1/flask-rs"
 authors = ["Brian Mason <bpmason1@hotmail.com>"]
 license = "MIT"
 description = "create http Request/Response objects from a raw TcpStream"
 readme = "README.md"
 keywords = ["http", "tcp"]
-categories = ["network-programming"]
+categories = ["network-programming", "web-programming"]
 edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
