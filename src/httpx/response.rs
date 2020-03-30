@@ -84,16 +84,22 @@ fn _read_http_response(reader: &mut BufReader<TcpStream>) -> Result<Response<Vec
     };
 
     let mut body = vec![0; content_length];
-    if reader.read_exact(&mut body).is_err() {
-        eprintln!("ERROR reading response body from stream");
-    }
-
-    match response.body(body) {
-        Ok(resp) => Ok(resp),
+    match reader.read_exact(&mut body) {
+        Ok(_) => {
+            match response.body(body) {
+                Ok(req) => Ok(req),
+                Err(http_err) => {
+                    eprintln!("ERROR reading response body from stream");
+                    let msg: String = http_err.to_string();
+                    let flask_err = FlaskError::ClientClosedRequest(msg);
+                    Err(flask_err)
+                }
+            }
+        },
         Err(http_err) => {
             let msg: String = http_err.to_string();
             let flask_err = FlaskError::BadRequest(msg);
-            Err(flask_err)
+            Err(flask_err) 
         }
     }
 }

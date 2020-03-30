@@ -60,26 +60,6 @@ fn _read_initial_request_line(reader: &mut BufReader<TcpStream>) -> Result<Build
     Ok(request)
 }
 
-// fn _read_buffered_line(reader: &mut BufReader<TcpStream>) -> Result<String, FlaskError> {
-//     let mut line: String = String::from("");
-//     match reader.read_line(&mut line) {
-//         Ok(num_bytes) => {
-//             if num_bytes != line.len() {
-//                 let msg = format!("Error in request line byte count");
-//                 let flask_err = FlaskError::InternalServerError(msg);
-//                 Err(flask_err)
-//             } else {
-//                 Ok(line)
-//             }
-//         },
-//         Err(buf_err) => {
-//             let msg = format!("Error reading buffered request line: {}", buf_err);
-//             let flask_err = FlaskError::ClientClosedRequest(msg);
-//             Err(flask_err)
-//         }
-//     }
-// }
-
 fn _read_http_request(reader: &mut BufReader<TcpStream>) -> Result<Request<Vec<u8>>, FlaskError> {
     let mut request = _read_initial_request_line(reader)?;
 
@@ -102,12 +82,18 @@ fn _read_http_request(reader: &mut BufReader<TcpStream>) -> Result<Request<Vec<u
     };
 
     let mut body = vec![0; content_length];
-    if reader.read_exact(&mut body).is_err() {
-        eprintln!("ERROR reading request body from stream");
-    }
-
-    match request.body(body) {
-        Ok(req) => Ok(req),
+    match reader.read_exact(&mut body) {
+        Ok(_) => {
+            match request.body(body) {
+                Ok(req) => Ok(req),
+                Err(http_err) => {
+                    eprintln!("ERROR reading request body from stream");
+                    let msg: String = http_err.to_string();
+                    let flask_err = FlaskError::ClientClosedRequest(msg);
+                    Err(flask_err)
+                }
+            }
+        },
         Err(http_err) => {
             let msg: String = http_err.to_string();
             let flask_err = FlaskError::BadRequest(msg);
