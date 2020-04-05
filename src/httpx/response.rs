@@ -71,7 +71,13 @@ fn _read_http_response(reader: &mut BufReader<TcpStream>) -> Result<Response<Vec
                 break;
             }
 
-            let (_, header_line) = read_header(line.as_bytes()).unwrap();
+            let header_line = match read_header(line.as_bytes()) {
+                Ok((_, hl)) => hl,
+                Err(_) => {
+                    let msg = format!("Malformed header line in request");
+                    return Err( FlaskError::BadRequest(msg) );
+                }
+            };
             // println!("{:?}", line.as_bytes());
 
             if header_line.key.to_lowercase() == CONTENT_LENGTH_HEADER {
