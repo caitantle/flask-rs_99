@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/bpmason1/flask-rs.svg?branch=master)](https://travis-ci.org/bpmason1/flask-rs)
+[![minimum rustc 1.31](https://img.shields.io/badge/rustc-1.31+-yellow.svg)
 
 # flask
 
