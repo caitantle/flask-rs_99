@@ -9,7 +9,7 @@ pub use request::read_http_request;
 pub use response::read_http_response;
 
 use http::Version;
-use nom::character::is_alphanumeric;
+// use nom::character::is_alphanumeric;
 use std::net::TcpStream;
 use std::io::{
     BufReader,
@@ -26,17 +26,17 @@ struct Header<'b> {
     value: &'b str,
 }
 
-fn is_token_char(i: u8) -> bool {
-    is_alphanumeric(i) ||
-    b"!#$%&'*+-.^_`|~".contains(&i)
-  }
+// fn is_token_char(i: u8) -> bool {
+//     is_alphanumeric(i) ||
+//     b"!#$%&'*+-.^_`|~".contains(&i)
+// }
 
-named!(token <&str>,
-    map_res!(
-        take_while!(is_token_char),
-        from_utf8
-    )
-);
+// named!(token <&str>,
+//     map_res!(
+//         take_while!(is_token_char),
+//         from_utf8
+//     )
+// );
 
 named!( http_version <&str>,
     map_res!(

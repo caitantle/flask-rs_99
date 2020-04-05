@@ -5,8 +5,8 @@ use super::{
     http,
     http_version,
     read_buffered_line,
-    read_header,
-    token
+    read_header
+    // token
 };
 
 use crate::combinators::{
@@ -34,7 +34,7 @@ struct ResponseLine<'a> {
 named!( parse_response_line <ResponseLine>,
     do_parse!(
         http >> slash >> version: http_version >> opt!(spaces) >>
-        status_code: number >> opt!(spaces) >> token >> crlf >>
+        status_code: number >> spaces >> take_until1!("\r") >> crlf >>
         (ResponseLine {status_code: status_code, version: version})
     )
 );
@@ -144,6 +144,28 @@ mod tests {
     use std::net::TcpStream;
     use rand::{Rng, thread_rng};
     use rand::distributions::Alphanumeric;
+    
+    #[test]
+    fn test_parse_response_line_ok() {
+        let resp_line_str = "HTTP/1.1 200 OK\r\n";
+        let parse_result = parse_response_line(resp_line_str.as_bytes());
+        assert!(parse_result.is_ok());
+
+        let (_, resp_line) = parse_result.unwrap();
+        assert_eq!(resp_line.status_code, "200");
+        assert_eq!(resp_line.version, "1.1");
+    }
+
+    #[test]
+    fn test_parse_response_line_server_error() {
+        let resp_line_str = "HTTP/1.1 500 Internal Server Error\r\n";
+        let parse_result = parse_response_line(resp_line_str.as_bytes());
+        assert!(parse_result.is_ok());
+
+        let (_, resp_line) = parse_result.unwrap();
+        assert_eq!(resp_line.status_code, "500");
+        assert_eq!(resp_line.version, "1.1");
+    }
 
     #[test]
     fn test_minimal_get_request() {
