@@ -45,7 +45,15 @@ fn _read_initial_request_line(reader: &mut BufReader<TcpStream>) -> Result<Build
     let mut line: String = String::from("");
     match reader.read_line(&mut line) {
         Ok(_) => {
-            let (_, resp_line) = parse_response_line(line.as_bytes()).unwrap();
+            let (_, resp_line) = match parse_response_line(line.as_bytes()) {
+                Ok(rl) => rl,
+                Err(parse_err) => {
+                    eprintln!("ERROR in parse_response_line for line: {}", line);
+                    let msg: String = parse_err.to_string();
+                    let flask_err = FlaskError::BadRequest(msg);
+                    return Err(flask_err);
+                }
+            };
 
             let status_code_bytes = resp_line.status_code.as_bytes();
             let status_code = StatusCode::from_bytes(status_code_bytes).unwrap();
@@ -136,7 +144,7 @@ mod tests {
     use std::net::TcpStream;
     use rand::{Rng, thread_rng};
     use rand::distributions::Alphanumeric;
-    
+
     #[test]
     fn test_minimal_get_request() {
         let mock_body = "Hello World!";
