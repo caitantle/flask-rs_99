@@ -75,7 +75,13 @@ fn _read_http_response(reader: &mut BufReader<TcpStream>) -> Result<Response<Vec
             // println!("{:?}", line.as_bytes());
 
             if header_line.key.to_lowercase() == CONTENT_LENGTH_HEADER {
-                content_length_mut = header_line.value.parse::<usize>().unwrap();
+                match header_line.value.parse::<usize>() {
+                    Ok(val) => content_length_mut = val,
+                    Err(_) => {
+                        let msg = format!("Invalid Content-Length: {}", header_line.value);
+                        return Err( FlaskError::BadRequest(msg) );
+                    }
+                }
             }
             // println!("Key => {}", elem.key);
             response = response.header(header_line.key, header_line.value);
