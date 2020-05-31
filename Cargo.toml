@@ -1,6 +1,6 @@
 [package]
 name = "flask"
-version = "2.0.1"
+version = "2.0.2"
 repository = "https://github.com/bpmason1/flask-rs"
 authors = ["Brian Mason <bpmason1@hotmail.com>"]
 license = "MIT"
