@@ -47,8 +47,14 @@ fn _read_initial_request_line(reader: &mut BufReader<TcpStream>) -> Result<Build
     let mut line: String = String::from("");
     match reader.read_line(&mut line) {
         Ok(_) => {
-            let (_, req_line) = parse_request_line(line.as_bytes()).unwrap();
-            let http_version = get_http_version(req_line.version).unwrap();
+            let (_, req_line) = match parse_request_line(line.as_bytes()) {
+                Ok(parsed_line) => parsed_line,
+                Err(_) => {
+                    let msg = format!("Malformed first line of request");
+                    return Err( FlaskError::BadRequest(msg) );
+                }
+            };
+            let http_version = get_http_version(req_line.version)?;
 
             request = request
                 .method(req_line.method)
