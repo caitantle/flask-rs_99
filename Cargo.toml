@@ -1,6 +1,6 @@
 [package]
 name = "flask"
-version = "2.0.3"
+version = "2.0.4"
 repository = "https://github.com/bpmason1/flask-rs"
 authors = ["Brian Mason <bpmason1@hotmail.com>"]
 license = "MIT"
@@ -14,9 +14,9 @@ edition = "2018"
 
 [dependencies]
 http = "0.2"
-nom = { version = "6.1.0", features = ["regexp"] }
+nom = { version = "6.2.1" }
 
 [dev-dependencies]
-mockito = "0.28.0"
-rand = "0.7.3"
+mockito = "0.31.0"
+rand = "0.8.5"
 

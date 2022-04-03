@@ -246,12 +246,40 @@ mod tests {
     }
 
     #[test]
+    fn test_delete_request_with_headers() {
+        let endpoint = "/first/second/third?aaa=bbb&ccc=ddd";
+        let mock_body = "this is a delete request";
+        let _mock = mock("DELETE", endpoint)
+                .with_header("fluffy", "bunny")
+                .with_header("wet", "dog") // headers names are NOT case sensitive
+                .with_body(mock_body.clone())
+                .create();
+
+        let mut stream = TcpStream::connect(server_address()).unwrap();
+        let payload = format!("DELETE {} HTTP/1.1\r\n\r\n", endpoint);
+        stream.write_all(payload.as_bytes()).unwrap();
+
+        let resp = read_http_response(stream).unwrap();
+        let content_length = resp.headers()[http::header::CONTENT_LENGTH].to_str().unwrap();
+
+        assert_eq!(resp.status(), StatusCode::OK);
+        assert_eq!(resp.version(), Version::HTTP_11);
+        assert_eq!(content_length, mock_body.len().to_string());
+
+        assert_eq!(resp.headers()["fluffy"], "bunny");
+        assert_eq!(resp.headers()["wet"], "dog");
+
+        _mock.assert();
+    }
+
+    #[test]
     fn test_post_request_with_body() {
         let mut rng = thread_rng();
-        let rand_len = rng.gen_range(10, 20);
+        let rand_len = rng.gen_range(10..20);
         let rand_body: String = rng
             .sample_iter(Alphanumeric)
             .take(rand_len.clone())
+            .map(char::from)
             .collect();
 
         let _mock = mock("POST", "/foo/bar").with_body(rand_body.clone()).create();
@@ -278,10 +306,11 @@ mod tests {
     #[test]
     fn test_post_response_with_large_body() {
         let mut rng = thread_rng();
-        let rand_len: usize = rng.gen_range(1e5 as usize, 1e6 as usize);
+        let rand_len = rng.gen_range(1e5..1e6) as usize;
         let rand_body: String = rng
             .sample_iter(Alphanumeric)
             .take(rand_len.clone())
+            .map(char::from)
             .collect();
 
         let _mock = mock("POST", "/foo-bar").with_body(rand_body.clone()).create();  // .expect_at_most(1).create();
@@ -328,3 +357,4 @@ mod tests {
         _mock.assert();
     }
 }
+
