@@ -8,15 +8,15 @@ description = "create http Request/Response objects from a raw TcpStream"
 readme = "README.md"
 keywords = ["http", "tcp"]
 categories = ["network-programming", "web-programming"]
-edition = "2018"
+edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 http = "0.2"
-nom = { version = "6.2.1" }
+nom = { version = "7.1" }
 
 [dev-dependencies]
-mockito = "0.31.0"
+mockito = "1.0.2"
 rand = "0.8.5"
 

@@ -1,63 +1,26 @@
 mod errors;
 mod request;
-mod response;
 
-
-// These function are the modules public interface
 pub use errors::FlaskError;
-pub use request::read_http_request;
-pub use response::read_http_response;
+
+use crate::combinators::*;
 
 use http::Version;
-// use nom::character::is_alphanumeric;
+use nom::IResult;
 use std::net::TcpStream;
 use std::io::{
     BufReader,
     prelude::*
 };
-use std::str::{self, from_utf8};
 
-use crate::combinators::*;
-
-const CONTENT_LENGTH_HEADER: &str = "content-length";
+pub use request::read_http_request;
 
 struct Header<'b> {
     key: &'b str,
     value: &'b str,
 }
 
-// fn is_token_char(i: u8) -> bool {
-//     is_alphanumeric(i) ||
-//     b"!#$%&'*+-.^_`|~".contains(&i)
-// }
-
-// named!(token <&str>,
-//     map_res!(
-//         take_while!(is_token_char),
-//         from_utf8
-//     )
-// );
-
-named!( http_version <&str>,
-    map_res!(
-        take!(3),
-        from_utf8
-    )
-);
-
-named!( to_space <&str>,
-    map_res!(
-        is_not!(" "),
-        from_utf8
-    )
-);
-
-named!( read_header <Header>,
-    do_parse!(
-        key: http_header_name >> colon >> space >> value: header_value >> crlf >>
-        (Header {key: key, value: value})
-    )
-);
+const CONTENT_LENGTH_HEADER: &str = "content-length";
 
 fn get_http_version(ver_str: &str) -> Result<Version, FlaskError> {
     match ver_str {
@@ -96,3 +59,14 @@ fn read_buffered_line(reader: &mut BufReader<TcpStream>) -> Result<String, Flask
         }
     }
 }
+
+fn read_header(line: &str) -> Result<Header, FlaskError> {
+    let (line, key) = http_header_name(line).unwrap();
+    let (line, _) = colon(line).unwrap();
+    let (line, _) = space(line).unwrap();
+    let (line, value) = header_value(line).unwrap();
+    match crlf(line) {
+      Ok(_) => Ok( Header {key: key, value: value} ),
+      Err(_) => Err( FlaskError::BadRequest("Malformed Header: no terminating CRLF".to_string()) )
+    }
+  }
