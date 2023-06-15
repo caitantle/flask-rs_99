@@ -1,5 +1,5 @@
 use nom::branch::alt;
-use nom::bytes::complete::{is_a, is_not, take};
+use nom::bytes::complete::{is_a, is_not, take, take_until1};
 use nom::bytes::streaming::{tag, tag_no_case, take_while};
 use nom::character::{is_alphanumeric, is_space};
 use nom::combinator::map_res;
@@ -47,19 +47,21 @@ pub fn to_space(s: &str) -> IResult<&str, &str> {
     is_not(" ")(s)
 }
 
+pub fn take_until(s: &str) -> IResult<&str, &str> {
+  take_until1("/r")(s)
+}
+
 // ***************************************************************************
 // classifiers
 // ***************************************************************************
-pub fn is_digit_char(i: u8) -> bool {
-  b"0123456789".contains(&i)
+pub fn is_digit_char(ch: char) -> bool {
+  let ch_u8 = ch as u8;
+  b"0123456789".contains(&ch_u8)
 }
 
-// pub fn number(s: &str) -> &str {
-//   map_res(
-//     take_while(is_digit_char)(s),
-//     from_utf8
-//   )
-// }
+pub fn number(s: &str) -> IResult<&str, &str> {
+  take_while(is_digit_char)(s)
+}
 
 // ***************************************************************************
 // http related combinators

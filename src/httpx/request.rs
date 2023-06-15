@@ -10,9 +10,6 @@ use crate::combinators::*;
 
 use http::Request;
 use http::request::Builder;
-// use nom::Err;
-// use nom::error::Error;
-// use nom::error::ErrorKind;
 use nom::Parser;
 use std::io::{
   BufReader,
@@ -29,9 +26,9 @@ struct RequestLine<'a> {
 
 fn parse_request_line(line: &str) -> Result<RequestLine, FlaskError> {
     let (line, method): (&str, &str) = http_method(line).unwrap();
-    let (line, _): (&str, &str) = spaces(line).unwrap();
+    let (line, _): (&str, &str) = spaces(line).unwrap();  // make me opt!  ??
     let (line, target): (&str, &str) = to_space(line).unwrap();
-    let (line, _): (&str, &str) = spaces(line).unwrap();
+    let (line, _): (&str, &str) = spaces(line).unwrap();  // make me opt!  ??
     let (line, version): (&str, &str) = http_version(line).unwrap();
     match crlf(line) {
       Ok(_) => Ok(RequestLine {method: method, target: target, version: version}),
