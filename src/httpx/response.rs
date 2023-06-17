@@ -82,11 +82,11 @@ fn _read_initial_request_line(reader: &mut BufReader<TcpStream>) -> Result<Build
                   return Err(flask_err);
               }
           };
-          let http_version = get_http_version(resp_line.version)?;
+          let version = get_http_version(resp_line.version)?;
 
           response = response
               .status(status_code)
-              .version(http_version);
+              .version(version);
       },
       Err(_) => {}
   }
@@ -444,4 +444,37 @@ mod tests {
         _mock.assert();
     }
 
+    #[test]
+    fn test_bad_http_method() {
+      let line = "HTP/1.1 200 OK\r\n";
+      let result = parse_response_line(line);
+      let flask_err = result.err().unwrap();
+      assert_eq!(flask_err.get_msg(), "Malformed Response Line: bad http version");
+    }
+
+    #[test]
+    fn test_bad_missing_crlf() {
+        let line = "HTTP/1.1 200 OK";
+      let result = parse_response_line(line);
+      let flask_err = result.err().unwrap();
+      // without the /r the parser doesn't know when the status message ends
+      assert_eq!(flask_err.get_msg(), "Malformed Response Line: error parsing status message");
+    }
+
+    #[test]
+    fn test_bad_missing_carriage_return() {
+      let line = "HTTP/1.1 200 OK\n";
+      let result = parse_response_line(line);
+      let flask_err = result.err().unwrap();
+      assert_eq!(flask_err.get_msg(), "Malformed Response Line: error parsing status message");
+    }
+
+    #[test]
+    fn test_bad_missing_newline() {
+      let line = "HTTP/1.1 200 OK\r";
+      let result = parse_response_line(line);
+      let flask_err = result.err().unwrap();
+      // without the /r the parser doesn't know when the status message ends
+      assert_eq!(flask_err.get_msg(), "Malformed Response Line: no terminating CRLF");
+    }
 }
