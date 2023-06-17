@@ -73,12 +73,12 @@ pub fn http_method(s: &str) -> IResult<&str, &str> {
   ))(s)
 }
 
-// pub fn http_version(s: &str) -> IResult<&str, &str> {
-//   take(3usize)(s)
-// }
-
+pub fn http_slash(s: &str) ->  IResult<&str, &str> {
+  tag_no_case("HTTP/")(s)
+}
+// take_until1("\r")(s)
 pub fn http_version(s: &str) -> IResult<&str, &str> {
-  let result = tag_no_case("HTTP/")(s);
+  let result = http_slash(s);
   match result {
     Ok((s2, _)) => take(3usize)(s2),
     Err(_) => result

@@ -10,7 +10,9 @@ use crate::combinators::*;
 
 #[derive(PartialEq, Debug)]
 struct ResponseLine<'a> {
+    // http_version_num: &'a str,
     status_code: &'a str,
+    status_msg: &'a str,
     version: &'a str,
 }
 
@@ -25,14 +27,33 @@ use std::net::TcpStream;
 
 // "HTTP/1.1 200 OK\r\n";
 fn parse_response_line(line: &str) -> Result<ResponseLine, FlaskError> {
-  eprintln!("BPM:  {}", line);
-  let (line, version): (&str, &str) = http_version(line).unwrap();
-  let (line, _): (&str, &str) = spaces(line).unwrap();
-  let (line, status_code): (&str, &str) = number(line).unwrap();
-  let (line, _): (&str, &str) = spaces(line).unwrap();
-  let (line, _): (&str, &str) = take_until_carriage_return(line).unwrap();
+  let (line, version): (&str, &str) = match http_version(line) {
+    Ok(obj) => obj,
+    Err(_) => return Err( FlaskError::BadRequest("Malformed Response Line: bad http version".to_string()) )
+  };
+
+  let (line, _): (&str, &str) = match spaces(line) {
+    Ok(obj) => obj,
+    Err(_) => return Err( FlaskError::BadRequest("Malformed Response Line: no spaces before status code".to_string()) )
+  };
+
+  let (line, status_code): (&str, &str) = match number(line) {
+    Ok(obj) => obj,
+    Err(_) => return Err( FlaskError::BadRequest("Malformed Response Line: no status code".to_string()) )
+  };
+
+  let (line, _): (&str, &str) = match spaces(line) {
+    Ok(obj) => obj,
+    Err(_) => return Err( FlaskError::BadRequest("Malformed Response Line: no spaces after status code".to_string()) )
+  };
+
+  let (line, status_msg): (&str, &str) = match take_until_carriage_return(line) {
+    Ok(obj) => obj,
+    Err(_) => return Err( FlaskError::BadRequest("Malformed Response Line: error parsing status message".to_string()) )
+  };
+
   match crlf(line) {
-    Ok(_) => Ok(ResponseLine {status_code: status_code, version: version}),
+    Ok(_) => Ok(ResponseLine {status_code: status_code, status_msg: status_msg, version: version}),
     Err(_) => Err( FlaskError::BadRequest("Malformed Response Line: no terminating CRLF".to_string()) )
   }
 }
