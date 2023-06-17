@@ -10,7 +10,6 @@ use crate::combinators::*;
 
 use http::Request;
 use http::request::Builder;
-use nom::Parser;
 use std::io::{
   BufReader,
   prelude::*
@@ -131,18 +130,22 @@ mod tests {
   use super::*;
 
   #[test]
-  fn test_parse_request_line__good() {
+  fn test_parse_request_line_good() {
     let line = "POST  https://panthip.com  HTTP/1.2\r\n";
-    match parse_request_line(line) {
-      Ok(parsed_line) => {
-        assert_eq!(parsed_line.method, "POST");
-        assert_eq!(parsed_line.target, "https://panthip.com");
-        assert_eq!(parsed_line.version, "1.2");
-      },
-      Err(e) => {
-        assert_eq!(true, false);
-      }
-    }
+    let parsed_line = parse_request_line(line).unwrap();
+    assert_eq!(parsed_line.method, "POST");
+      assert_eq!(parsed_line.target, "https://panthip.com");
+      assert_eq!(parsed_line.version, "1.2");
+    // match  {
+    //   Ok(parsed_line) => {
+    //     assert_eq!(parsed_line.method, "POST");
+    //     assert_eq!(parsed_line.target, "https://panthip.com");
+    //     assert_eq!(parsed_line.version, "1.2");
+    //   },
+    //   Err(e) => {
+    //     assert_eq!(true, false);
+    //   }
+    // }
   }
 
   // fn test_parse_request_line__no_crlf() {

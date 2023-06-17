@@ -1,15 +1,8 @@
 use nom::branch::alt;
 use nom::bytes::complete::{is_a, is_not, take, take_until1};
 use nom::bytes::streaming::{tag, tag_no_case, take_while};
-use nom::character::{is_alphanumeric, is_space};
-use nom::combinator::map_res;
-use nom::error::ErrorKind;
-use nom::Needed::Size;
-use std::str::{self, from_utf8};
-
-use nom::Err;
-use nom::Err::Incomplete;
-use nom::error::Error;
+use nom::character::is_alphanumeric;
+// use std::str::{self, from_utf8};
 use nom::IResult;
 
 // ***************************************************************************
@@ -24,10 +17,6 @@ pub fn colon(i: &str) -> IResult<&str, &str> {
   tag(":")(i)
 }
 
-// pub fn slash(i: &str) -> IResult<&str, &str> {
-//   tag("/")(i)
-// }
-
 pub fn space(i: &str) -> IResult<&str, &str> {
   tag(" ")(i)
 }
@@ -39,15 +28,15 @@ pub fn spaces(i: &str) -> IResult<&str, &str> {
   is_a(" ")(i)
 }
 
-pub fn digits(i: &str) -> IResult<&str, &str> {
-  is_a("0123456789")(i)
-}
+// pub fn digits(i: &str) -> IResult<&str, &str> {
+//   is_a("0123456789")(i)
+// }
 
 pub fn to_space(s: &str) -> IResult<&str, &str> {
     is_not(" ")(s)
 }
 
-pub fn take_until(s: &str) -> IResult<&str, &str> {
+pub fn take_until_carriage_return(s: &str) -> IResult<&str, &str> {
   take_until1("\r")(s)
 }
 
@@ -133,6 +122,10 @@ mod tests {
   extern crate rand;
 
   use super::*;
+  use nom::error::ErrorKind;
+  use nom::Err;
+  // use nom::Err::Incomplete;
+  use nom::error::Error;
 
 
   #[test]
@@ -149,10 +142,6 @@ mod tests {
     let resp2 = crlf("Foo\r\nBar");
     let err2 = Err(Err::Error(Error::new("Foo\r\nBar", ErrorKind::Tag)));
     assert_eq!(resp2, err2); 
-
-    // let resp3 = crlf("");
-    // let err3 = Err(Incomplete(Size(2)));
-    // assert_eq!(resp3, err3); 
   }
 
   #[test]
@@ -180,23 +169,15 @@ mod tests {
     assert_eq!(resp, err); 
   }
 
-  #[test]
-  fn test_digits() {
-    assert_eq!(digits("7"), Ok(("", "7")));
-    assert_eq!(digits("777"), Ok(("", "777")));
-    assert_eq!(digits("123xxx456"), Ok(("xxx456", "123")));
-
-    let resp = digits("car 5");
-    let err = Err(Err::Error(Error::new("car 5", ErrorKind::IsA)));
-    assert_eq!(resp, err);
-  }
-
   // #[test]
-  // fn test_http_tag() {
-  //   assert_eq!(http("http"), Ok(("", "http")));
-  //   assert_eq!(http("HTTP"), Ok(("", "HTTP")));
-  //   assert_eq!(http("HttP"), Ok(("", "HttP")));
-  //   assert_eq!(http("HttP\nparser"), Ok(("\nparser", "HttP")));
+  // fn test_digits() {
+  //   assert_eq!(digits("7"), Ok(("", "7")));
+  //   assert_eq!(digits("777"), Ok(("", "777")));
+  //   assert_eq!(digits("123xxx456"), Ok(("xxx456", "123")));
+
+  //   let resp = digits("car 5");
+  //   let err = Err(Err::Error(Error::new("car 5", ErrorKind::IsA)));
+  //   assert_eq!(resp, err);
   // }
 
   #[test]

@@ -16,7 +16,6 @@ struct ResponseLine<'a> {
 
 use http::{Response, StatusCode};
 use http::response::Builder;
-//   use nom::Parser;
 use std::io::{
   BufReader,
   prelude::*
@@ -28,10 +27,10 @@ use std::net::TcpStream;
 fn parse_response_line(line: &str) -> Result<ResponseLine, FlaskError> {
   eprintln!("BPM:  {}", line);
   let (line, version): (&str, &str) = http_version(line).unwrap();
-  let (line, _): (&str, &str) = spaces(line).unwrap();  // make me opt!  ??
+  let (line, _): (&str, &str) = spaces(line).unwrap();
   let (line, status_code): (&str, &str) = number(line).unwrap();
-  let (line, _): (&str, &str) = spaces(line).unwrap();  // make me opt!  ??
-  let (line, _): (&str, &str) = take_until(line).unwrap();
+  let (line, _): (&str, &str) = spaces(line).unwrap();
+  let (line, _): (&str, &str) = take_until_carriage_return(line).unwrap();
   match crlf(line) {
     Ok(_) => Ok(ResponseLine {status_code: status_code, version: version}),
     Err(_) => Err( FlaskError::BadRequest("Malformed Response Line: no terminating CRLF".to_string()) )
@@ -145,8 +144,7 @@ mod tests {
 
     use super::*;
     use http::{Version, StatusCode};
-    // use mockito::{mock, server_address};
-    use mockito::Matcher;
+    // use mockito::Matcher;
     use std::net::TcpStream;
     use rand::{Rng, thread_rng};
     use rand::distributions::Alphanumeric;

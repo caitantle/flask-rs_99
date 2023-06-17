@@ -3,18 +3,17 @@ mod request;
 mod response;
 
 pub use errors::FlaskError;
+pub use request::read_http_request;
+pub use response::read_http_response;
 
 use crate::combinators::*;
 
 use http::Version;
-use nom::IResult;
 use std::net::TcpStream;
 use std::io::{
     BufReader,
     prelude::*
 };
-
-pub use request::read_http_request;
 
 struct Header<'b> {
     key: &'b str,
