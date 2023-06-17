@@ -24,11 +24,26 @@ struct RequestLine<'a> {
 }
 
 fn parse_request_line(line: &str) -> Result<RequestLine, FlaskError> {
-    let (line, method): (&str, &str) = http_method(line).unwrap();
-    let (line, _): (&str, &str) = spaces(line).unwrap();  // make me opt!  ??
-    let (line, target): (&str, &str) = to_space(line).unwrap();
-    let (line, _): (&str, &str) = spaces(line).unwrap();  // make me opt!  ??
-    let (line, version): (&str, &str) = http_version(line).unwrap();
+    let (line, method): (&str, &str) = match http_method(line) {
+      Ok(obj) => obj,
+      Err(_) => return Err( FlaskError::BadRequest("Malformed Request Line: missing HTTP method".to_string()) )
+    };
+    let (line, _): (&str, &str) = match spaces(line) {
+      Ok(obj) => obj,
+      Err(_) => return Err( FlaskError::BadRequest("Malformed Request Line: missing space before target URL".to_string()) )
+    };
+    let (line, target): (&str, &str) = match to_space(line) {
+      Ok(obj) => obj,
+      Err(_) => return Err( FlaskError::BadRequest("Malformed Request Line: error parsing target URL".to_string()) )
+    };
+    let (line, _): (&str, &str) = match spaces(line) {
+      Ok(obj) => obj,
+      Err(_) => return Err( FlaskError::BadRequest("Malformed Request Line: missing space after target URL".to_string()) )
+    };
+    let (line, version): (&str, &str) = match http_version(line) {
+      Ok(obj) => obj,
+      Err(_) => return Err( FlaskError::BadRequest("Malformed Request Line: bad http version".to_string()) )
+    };
     match crlf(line) {
       Ok(_) => Ok(RequestLine {method: method, target: target, version: version}),
       Err(_) => Err( FlaskError::BadRequest("Malformed Request Line: no terminating CRLF".to_string()) )
@@ -48,12 +63,12 @@ fn _read_initial_request_line(reader: &mut BufReader<TcpStream>) -> Result<Build
                     return Err( FlaskError::BadRequest(msg) );
                 }
             };
-            let http_version = get_http_version(req_line.version)?;
+            let version = get_http_version(req_line.version)?;
 
             request = request
                 .method(req_line.method)
                 .uri(req_line.target)
-                .version(http_version);
+                .version(version);
         },
         Err(_) => {}
     }
@@ -134,8 +149,8 @@ mod tests {
     let line = "POST  https://panthip.com  HTTP/1.2\r\n";
     let parsed_line = parse_request_line(line).unwrap();
     assert_eq!(parsed_line.method, "POST");
-      assert_eq!(parsed_line.target, "https://panthip.com");
-      assert_eq!(parsed_line.version, "1.2");
+    assert_eq!(parsed_line.target, "https://panthip.com");
+    assert_eq!(parsed_line.version, "1.2");
     // match  {
     //   Ok(parsed_line) => {
     //     assert_eq!(parsed_line.method, "POST");
@@ -148,13 +163,35 @@ mod tests {
     // }
   }
 
-  // fn test_parse_request_line__no_crlf() {
-  //   let line = "POST  https://panthip.com  HTTP/1.2";
-  //   let expected = FlaskError::BadRequest("Malformed Request Line: no terminating CRLF".to_string());
+  #[test]
+  fn test_parse_request_line_bad_http_method() {
+    let line = "POS  https://panthip.com  HTTP/1.1\r\n";
+    let result = parse_request_line(line);
+    let flask_err = result.err().unwrap();
+    assert_eq!(flask_err.get_msg(), "Malformed Request Line: missing HTTP method"); 
+  }
 
-  //   match parse_request_line(line) {
-  //     Ok(_) => assert_eq!(true, false), // this test should return an Err
-  //     Err(e) => assert_eq!(e, expected)
-  //   };
-  // }
+  #[test]
+  fn test_parse_request_line_bad_missing_newline() {
+    let line = "POST  https://panthip.com  HTTP/1.1\r";
+    let result = parse_request_line(line);
+    let flask_err = result.err().unwrap();
+    assert_eq!(flask_err.get_msg(), "Malformed Request Line: no terminating CRLF"); 
+  }
+
+  #[test]
+  fn test_parse_request_line_bad_missing_carriage_return() {
+    let line = "POST  https://panthip.com  HTTP/1.1\n";
+    let result = parse_request_line(line);
+    let flask_err = result.err().unwrap();
+    assert_eq!(flask_err.get_msg(), "Malformed Request Line: no terminating CRLF"); 
+  }
+
+  #[test]
+  fn test_parse_request_line_bad_missing_crlf() {
+    let line = "POST  https://panthip.com  HTTP/1.1";
+    let result = parse_request_line(line);
+    let flask_err = result.err().unwrap();
+    assert_eq!(flask_err.get_msg(), "Malformed Request Line: no terminating CRLF"); 
+  }
 }
