@@ -48,7 +48,7 @@ pub fn to_space(s: &str) -> IResult<&str, &str> {
 }
 
 pub fn take_until(s: &str) -> IResult<&str, &str> {
-  take_until1("/r")(s)
+  take_until1("\r")(s)
 }
 
 // ***************************************************************************
